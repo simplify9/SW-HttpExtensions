@@ -5,10 +5,14 @@
     <PackageId>SimplyWorks.HttpExtensions</PackageId>
     <Authors>Simplify9</Authors>
     <Product>SimplyWorks.HttpExtensions</Product>
+    <Description>A lightweight .NET library providing HTTP extensions for simplified JSON operations, HTTP client helpers, and API client abstractions with JWT support. Includes extensions for HttpContent, HttpClient, HttpClientFactory, and dependency injection setup. See GitHub for full documentation and examples.</Description>
+    <PackageTags>http;httpclient;json;api;jwt;extensions;rest;client;factory;dependency-injection</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageProjectUrl>https://github.com/simplify9/HttpExtensions</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/simplify9/HttpExtensions</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/simplify9/SW-HttpExtensions</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/simplify9/SW-HttpExtensions</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +26,10 @@
 
   <ItemGroup>
     <None Include="..\icon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
