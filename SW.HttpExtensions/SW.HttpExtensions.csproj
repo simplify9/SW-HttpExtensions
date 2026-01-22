@@ -23,7 +23,6 @@
     <PackageReference Include="SimplyWorks.PrimitiveTypes" Version="8.1.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="..\icon.png">
       <Pack>True</Pack>
