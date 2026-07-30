@@ -20,8 +20,17 @@ namespace SW.HttpExtensions
             this.requestContext = requestContext;
             this.options = options;
 
+            // Remove-then-add rather than a bare Add: HttpHeaders.Add APPENDS a second value for an
+            // existing name, so building more than one builder over the same HttpClient (which is now
+            // once per call — see ApiClientBase.Builder) would otherwise send
+            // "sw-correlation-id: abc, abc", growing by one on every call. Remove-then-add is also
+            // what keeps the header CURRENT: a plain "add only if missing" guard would pin the first
+            // request's correlation id onto every later request that reuses the client.
             if (requestContext.IsValid)
+            {
+                httpClient.DefaultRequestHeaders.Remove(RequestContext.CorrelationIdHeaderName);
                 httpClient.DefaultRequestHeaders.Add(RequestContext.CorrelationIdHeaderName, requestContext.CorrelationId);
+            }
         }
 
         public ApiOperationBuilder<TApiClientOptions> Path(string path)
