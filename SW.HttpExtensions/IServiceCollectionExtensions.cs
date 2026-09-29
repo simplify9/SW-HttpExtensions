@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -9,6 +10,23 @@ namespace SW.HttpExtensions
 {
     public static class IServiceCollectionExtensions
     {
+        // IHttpClientFactory pools connections inside each SocketsHttpHandler indefinitely by
+        // default (PooledConnectionLifetime is Timeout.InfiniteTimeSpan) - a connection is only
+        // ever recycled if the *handler* itself gets rotated (HttpClientFactory does that every 2
+        // minutes by default, but a handler with in-flight or recently-used connections can live
+        // far longer than that). A connection that goes stale server-side - the remote pod
+        // restarting, a NAT/conntrack entry expiring, a load balancer dropping an idle socket -
+        // fails silently on its next reuse instead of erroring at the point the underlying
+        // network dropped it. Bounding PooledConnectionLifetime forces a fresh connection (and
+        // fresh DNS resolution) at least this often, so a connection can never go stale for
+        // longer than this window before it is discarded and replaced.
+        private static readonly TimeSpan PooledConnectionLifetime = TimeSpan.FromMinutes(2);
+
+        private static void ConfigureHandler(IHttpClientBuilder builder) =>
+            builder.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                PooledConnectionLifetime = PooledConnectionLifetime
+            });
 
         public static IServiceCollection AddJwtTokenParameters(this IServiceCollection serviceCollection, Action<JwtTokenParameters> configure = null)
         {
@@ -37,10 +55,10 @@ namespace SW.HttpExtensions
                 serviceCollection.AddTransient<TInterface, TImplementationMock>();
 
             else
-                serviceCollection.AddHttpClient<TInterface, TImplementation>(httpClient =>
+                ConfigureHandler(serviceCollection.AddHttpClient<TInterface, TImplementation>(httpClient =>
                 {
                     httpClient.BaseAddress = new Uri(clientOptions.BaseUrl);
-                });
+                }));
 
             return serviceCollection;
         }
@@ -53,10 +71,10 @@ namespace SW.HttpExtensions
 
             var clientOptions = serviceCollection.AddApiClientInternal(configure);
 
-            serviceCollection.AddHttpClient<TInterface, TImplementation>(httpClient =>
+            ConfigureHandler(serviceCollection.AddHttpClient<TInterface, TImplementation>(httpClient =>
             {
                 httpClient.BaseAddress = new Uri(clientOptions.BaseUrl);
-            });
+            }));
 
             return serviceCollection;
         }
@@ -64,13 +82,13 @@ namespace SW.HttpExtensions
         public static IServiceCollection AddApiClient<TImplementation, TOptions>(this IServiceCollection serviceCollection, Action<TOptions> configure = null)
             where TOptions : ApiClientOptionsBase, new()
             where TImplementation : ApiClientBase<TOptions>
-            
+
         {
             var clientOptions = serviceCollection.AddApiClientInternal(configure);
-            serviceCollection.AddHttpClient<TImplementation>(httpClient =>
+            ConfigureHandler(serviceCollection.AddHttpClient<TImplementation>(httpClient =>
             {
                 httpClient.BaseAddress = new Uri(clientOptions.BaseUrl);
-            });
+            }));
 
             return serviceCollection;
         }
